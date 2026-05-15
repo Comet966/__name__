@@ -107,25 +107,27 @@ def depth_mask_from_array(
 
 
 def get_depth_map(
-    input_path: str,
+    input_source: str | np.ndarray,
     device: str = "auto",
 ) -> np.ndarray:
     """
     仅返回深度图（不做蒙版分割）。
 
     参数:
-        input_path: 输入图片路径
-        device:     推理设备
+        input_source: 输入图片路径 或 BGR uint8 numpy 数组
+        device:       推理设备
     返回:
         (H, W), float32, [0, 1]
     """
-    input_path = Path(input_path)
-    if not input_path.exists():
-        raise FileNotFoundError(f"输入图片不存在: {input_path}")
-
-    img = cv2.imread(str(input_path))
-    if img is None:
-        raise ValueError(f"无法读取图片: {input_path}")
+    if isinstance(input_source, np.ndarray):
+        img = input_source
+    else:
+        p = Path(input_source)
+        if not p.exists():
+            raise FileNotFoundError(f"输入图片不存在: {p}")
+        img = cv2.imread(str(p))
+        if img is None:
+            raise ValueError(f"无法读取图片: {p}")
 
     pipeline = _get_pipeline(device)
     return estimate_depth(img, pipeline)
